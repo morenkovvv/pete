@@ -1,2 +1,7 @@
-json
-{"name": "pete-tts"}
+{
+  "name": "pete-tts",
+  "description": "Text-to-speech script for Digital Garden",
+  "author": "morenkovvv",
+  "version": "1.0.0",
+  "entry": "plugin.js"
+}
