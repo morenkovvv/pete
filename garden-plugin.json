@@ -1,7 +1,7 @@
 {
-  "name": "pete-tts",
-  "description": "Text-to-speech script for Digital Garden",
+  "id": "pete-tts",
+  "name": "Pete TTS",
+  "description": "Text to speech plugin",
   "author": "morenkovvv",
-  "version": "1.0.0",
-  "entry": "plugin.js"
+  "version": "1.0.0"
 }
