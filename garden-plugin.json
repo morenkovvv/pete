@@ -3,5 +3,6 @@
   "name": "Pete TTS",
   "description": "Text to speech plugin",
   "author": "morenkovvv",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "entry": "tts.js"
 }
