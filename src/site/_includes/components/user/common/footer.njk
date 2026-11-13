@@ -1,0 +1,44 @@
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const content = document.querySelector('.content, main, .markdown-rendered');
+  if (content) content.classList.add('tts-enabled');
+});
+
+document.addEventListener('click', function (e) {
+  // Ignore links, buttons, inputs, and summary toggles
+  if (e.target.closest('a, button, input, summary, .no-tts')) return;
+
+  const el = e.target.closest('.tts-enabled p, .tts-enabled li, .tts-enabled td, .tts-enabled th, .tts-enabled blockquote');
+  if (!el || !('speechSynthesis' in window)) return;
+
+  // If user selected specific text or double-clicked a single word, speak only that selection
+  const selection = window.getSelection().toString().trim();
+  const text = selection.length > 0 ? selection : el.innerText.trim();
+  if (!text) return;
+
+  // Auto-detect language: Cyrillic -> Russian, otherwise -> English
+  const hasCyrillic = /[а-яА-ЯёЁ]/.test(text);
+  const hasLatin = /[a-zA-Z]/.test(text);
+  const lang = (hasCyrillic && !hasLatin) || (hasCyrillic && text.match(/[а-яА-ЯёЁ]/g).length > (text.match(/[a-zA-Z]/g) || []).length)
+    ? 'ru-RU'
+    : 'en-US';
+
+  document.querySelectorAll('.tts-speaking').forEach(node => node.classList.remove('tts-speaking'));
+  el.classList.add('tts-speaking');
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang;
+  u.rate = lang === 'en-US' ? 0.75 : 0.95;
+  u.pitch = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const v = voices.filter(x => x.lang === lang && x.localService).pop()
+         || voices.find(x => x.lang && x.lang.startsWith(lang.slice(0, 2)));
+  if (v) u.voice = v;
+
+  u.onend = u.onerror = () => el.classList.remove('tts-speaking');
+
+  if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+});
+</script>
