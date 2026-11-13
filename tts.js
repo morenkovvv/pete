@@ -1,51 +1,44 @@
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    // Ищем главный контейнер статьи на Forestry
-    const content = document.querySelector("main") || document.querySelector("article") || document.body;
-    if (!content || document.getElementById("tts-btn")) return;
-
-    // Создаем кнопку
-    const btn = document.createElement("button");
-    btn.id = "tts-btn";
-    btn.innerText = "🔊 Read";
-    btn.style.cssText = "margin: 20px 0; padding: 10px 16px; cursor: pointer; border-radius: 8px; border: 1px solid #ccc; background: #f5f5f5; color: #000; font-weight: bold; font-size: 16px;";
-    
-    // Вставляем кнопку в начало статьи
-    content.insertBefore(btn, content.firstChild);
-
-    btn.addEventListener("click", () => {
-      if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        btn.innerText = "🔊 Read";
-        return;
-      }
-
-      // Фильтруем текст, оставляя только английские слова
-      const rawLines = content.innerText.split('\n');
-      const englishLines = rawLines.map(line => {
-        const words = line.split(/\s+/);
-        return words.filter((word, index) => {
-          if (/[\u0400-\u04FF\u0590-\u05FF]/.test(word)) return false; // Пропускаем русский и иврит
-          if (/[a-zA-Z]/.test(word)) return true; // Оставляем английский
-          return words.slice(Math.max(0, index - 2), index + 3).some(w => /[a-zA-Z]/.test(w) && !/[\u0400-\u04FF\u0590-\u05FF]/.test(w));
-        }).join(' ');
-      });
-
-      const textToSpeak = englishLines
-        .join('\n')
-        .replace(/[^a-zA-Z0-9.,!?\s]/g, '') 
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      if (!textToSpeak) return;
-
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'en-US'; // Американский голос
-      utterance.rate = 0.9;     // Чуть замедленная скорость для учебника
-      
-      utterance.onend = () => { btn.innerText = "🔊 Read"; };
-      btn.innerText = "🛑 Stop";
-      window.speechSynthesis.speak(utterance);
-    });
-  }, 500);
-});
+<style>
+.markdown-rendered p, .markdown-rendered ul, .markdown-rendered ol { margin-block-start: 0.5em; margin-block-end: 0.5em; }
+.markdown-rendered p + ul, .markdown-rendered p + ol { margin-block-start: 0.25em; }
+.markdown-rendered li { margin-bottom: 0.35em; }
+.tts-enabled p, .tts-enabled li, .tts-enabled td, .tts-enabled th, .tts-enabled blockquote { cursor: pointer; transition: color 0.15s ease; }
+.tts-enabled p:hover, .tts-enabled li:hover, .tts-enabled td:hover { text-decoration: underline dotted rgba(250, 204, 21, 0.45); }
+.tts-speaking { color: #facc15 !important; }
+</style>
+<script>
+(function() {
+  function initTTS() {
+    const content = document.querySelector('.content, main, .markdown-rendered');
+    if (content) content.classList.add('tts-enabled');
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTTS);
+  } else {
+    initTTS();
+  }
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('a, button, input, summary, .no-tts')) return;
+    const el = e.target.closest('.tts-enabled p, .tts-enabled li, .tts-enabled td, .tts-enabled th, .tts-enabled blockquote');
+    if (!el || !('speechSynthesis' in window)) return;
+    const selection = window.getSelection().toString().trim();
+    const text = selection.length > 0 ? selection : el.innerText.trim();
+    if (!text) return;
+    const ruCount = (text.match(/[а-яА-ЯёЁ]/g) || []).length;
+    const enCount = (text.match(/[a-zA-Z]/g) || []).length;
+    const lang = ruCount > enCount ? 'ru-RU' : 'en-US';
+    document.querySelectorAll('.tts-speaking').forEach(node => node.classList.remove('tts-speaking'));
+    el.classList.add('tts-speaking');
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = lang === 'en-US' ? 0.75 : 0.95;
+    u.pitch = 1;
+    const voices = window.speechSynthesis.getVoices();
+    const v = voices.filter(x => x.lang === lang && x.localService).pop() || voices.find(x => x.lang && x.lang.startsWith(lang.slice(0, 2)));
+    if (v) u.voice = v;
+    u.onend = u.onerror = () => el.classList.remove('tts-speaking');
+    if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  });
+})();
+</script>
