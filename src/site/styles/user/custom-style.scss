@@ -1,0 +1,18 @@
+.tts-enabled p,
+.tts-enabled li,
+.tts-enabled td,
+.tts-enabled th,
+.tts-enabled blockquote {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.tts-enabled p:hover,
+.tts-enabled li:hover,
+.tts-enabled td:hover {
+  text-decoration: underline dotted rgba(250, 204, 21, 0.45);
+}
+
+.tts-speaking {
+  color: #facc15 !important;
+}
